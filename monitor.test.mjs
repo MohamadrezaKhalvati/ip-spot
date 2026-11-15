@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { checkForChanges, setMonitoringEnabled, syncMonitoringAlarm, MONITOR_ALARM_NAME, MONITOR_INTERVAL_MINUTES, MONITOR_ENABLED_KEY } from './monitor.mjs';
+import { checkForChanges, ensureMonitoringPermission, setMonitoringEnabled, syncMonitoringAlarm, MONITOR_ALARM_NAME, MONITOR_INTERVAL_MINUTES, MONITOR_ENABLED_KEY } from './monitor.mjs';
 
 function fixture() {
   const data = {};
@@ -153,5 +153,44 @@ test('restores a missing alarm and repairs an outdated polling interval', async 
   assert.equal(alarms.get(MONITOR_ALARM_NAME).periodInMinutes, MONITOR_INTERVAL_MINUTES);
   alarms.set(MONITOR_ALARM_NAME, { periodInMinutes: 1 });
   await syncMonitoringAlarm({ storage, alarms: scheduler });
+  assert.equal(alarms.get(MONITOR_ALARM_NAME).periodInMinutes, MONITOR_INTERVAL_MINUTES);
+});
+
+test('revoked permission on restart disables saved monitoring and clears undelivered alerts', async () => {
+  const { data, storage, scheduler, alarms } = fixture();
+  await setMonitoringEnabled({ storage, alarms: scheduler }, true);
+  await checkForChanges({ storage, lookup: async () => ({ ipv4: '203.0.113.1', ipv6: null }), notify: async () => true });
+  await checkForChanges({ storage, lookup: async () => ({ ipv4: '203.0.113.2', ipv6: null }), notify: async () => false });
+  assert.ok(data.ipSpotMonitoringPendingV1);
+  const enabled = await ensureMonitoringPermission({
+    storage, alarms: scheduler, permissions: { async contains() { return false; } },
+  });
+  assert.equal(enabled, false);
+  assert.equal(data[MONITOR_ENABLED_KEY], false);
+  assert.equal(data.ipSpotMonitoringBaselineV1, undefined);
+  assert.equal(data.ipSpotMonitoringPendingV1, undefined);
+  assert.equal(alarms.size, 0);
+});
+
+test('disabled monitoring does not probe optional permission or recreate alarms', async () => {
+  const { storage, scheduler, alarms } = fixture();
+  let permissionChecks = 0;
+  const enabled = await ensureMonitoringPermission({
+    storage, alarms: scheduler,
+    permissions: { async contains() { permissionChecks++; return false; } },
+  });
+  assert.equal(enabled, false);
+  assert.equal(permissionChecks, 0);
+  assert.equal(alarms.size, 0);
+});
+
+test('granted permission permits restoring a missing background alarm', async () => {
+  const { storage, scheduler, alarms } = fixture();
+  await setMonitoringEnabled({ storage, alarms: scheduler }, true);
+  alarms.clear();
+  const enabled = await ensureMonitoringPermission({
+    storage, alarms: scheduler, permissions: { async contains() { return true; } },
+  });
+  assert.equal(enabled, true);
   assert.equal(alarms.get(MONITOR_ALARM_NAME).periodInMinutes, MONITOR_INTERVAL_MINUTES);
 });
