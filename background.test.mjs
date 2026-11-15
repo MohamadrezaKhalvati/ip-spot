@@ -4,7 +4,7 @@ import { MONITOR_ALARM_NAME, MONITOR_ENABLED_KEY } from './monitor.mjs';
 
 let importIndex = 0;
 
-function createChromeHarness({ enabled = true } = {}) {
+function createChromeHarness({ enabled = true, extensionPermission = true } = {}) {
   const data = { [MONITOR_ENABLED_KEY]: enabled };
   const scheduled = new Map();
   const listeners = new Map();
@@ -12,6 +12,7 @@ function createChromeHarness({ enabled = true } = {}) {
   let ipv4 = '203.0.113.10';
   let ipv6 = '2001:db8::10';
   let notificationGranted = true;
+  let extensionPermissionGranted = extensionPermission;
   let requests = 0;
 
   function event(name) {
@@ -35,7 +36,7 @@ function createChromeHarness({ enabled = true } = {}) {
     },
     runtime: { onInstalled: event('installed'), onStartup: event('startup') },
     permissions: {
-      async contains() { return notificationGranted; },
+      async contains() { return extensionPermissionGranted; },
       onRemoved: event('permission-removed'),
     },
     notifications: {
@@ -52,6 +53,7 @@ function createChromeHarness({ enabled = true } = {}) {
     data, scheduled, notifications, listeners,
     setAddresses(next4, next6) { ipv4 = next4; ipv6 = next6; },
     setNotificationPermission(allowed) { notificationGranted = allowed; },
+    setExtensionPermission(allowed) { extensionPermissionGranted = allowed; },
     get requests() { return requests; },
     async start() {
       await import(`./background.js?integration-test=${++importIndex}`);
@@ -94,4 +96,36 @@ test('background alarms do not perform any network calls when monitoring is off'
   assert.equal(browser.requests, 0);
   assert.equal(browser.notifications.length, 0);
   assert.equal(browser.scheduled.size, 0);
+});
+
+test('cold restart without notification permission turns monitoring off before network calls', async () => {
+  const browser = createChromeHarness({ enabled: true, extensionPermission: false });
+  await browser.start();
+  assert.equal(browser.data[MONITOR_ENABLED_KEY], false);
+  assert.equal(browser.scheduled.size, 0);
+  await browser.signal('alarm', { name: MONITOR_ALARM_NAME });
+  assert.equal(browser.requests, 0);
+});
+
+test('restarted worker stops checks when optional permission has disappeared', async () => {
+  const browser = createChromeHarness();
+  await browser.start();
+  await browser.signal('alarm', { name: MONITOR_ALARM_NAME });
+  assert.equal(browser.requests, 2);
+  browser.setExtensionPermission(false);
+  await browser.start();
+  assert.equal(browser.data[MONITOR_ENABLED_KEY], false);
+  await browser.signal('alarm', { name: MONITOR_ALARM_NAME });
+  assert.equal(browser.requests, 2);
+});
+
+test('extension permission removal cancels alarms and monitoring', async () => {
+  const browser = createChromeHarness();
+  await browser.start();
+  browser.setExtensionPermission(false);
+  await browser.signal('permission-removed', { permissions: ['notifications'] });
+  assert.equal(browser.data[MONITOR_ENABLED_KEY], false);
+  assert.equal(browser.scheduled.size, 0);
+  await browser.signal('alarm', { name: MONITOR_ALARM_NAME });
+  assert.equal(browser.requests, 0);
 });

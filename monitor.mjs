@@ -23,6 +23,16 @@ export async function syncMonitoringAlarm({ storage, alarms }) {
   }
 }
 
+export async function ensureMonitoringPermission({ storage, alarms, permissions }) {
+  const enabled = (await storage.get(MONITOR_ENABLED_KEY))?.[MONITOR_ENABLED_KEY] === true;
+  if (enabled && !await permissions.contains({ permissions: ['notifications'] })) {
+    await setMonitoringEnabled({ storage, alarms }, false);
+    return false;
+  }
+  await syncMonitoringAlarm({ storage, alarms });
+  return enabled;
+}
+
 export async function setMonitoringEnabled({ storage, alarms }, enabled) {
   if (enabled !== true) {
     await storage.set({ [MONITOR_ENABLED_KEY]: false });
