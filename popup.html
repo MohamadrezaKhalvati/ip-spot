@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IP Spot</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup">
+      <header class="topbar">
+        <div class="brand">
+          <img src="icons/icon32.png" alt="" width="32" height="32" />
+          <span>IP Spot</span>
+        </div>
+        <button id="refresh" class="icon-button" type="button" title="Check IP now" aria-label="Check IP now">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 7v5h-5M4 17v-5h5" />
+            <path d="M5.7 9A7 7 0 0 1 18 7l2 5M4 12l2 5a7 7 0 0 0 12.3-2" />
+          </svg>
+        </button>
+      </header>
+
+      <main>
+        <p id="status" class="status" role="status" aria-live="polite">Finding your public IP…</p>
+
+        <section id="result" hidden aria-label="Your public IP and estimated location">
+          <div class="ip-block">
+            <div class="eyebrow">Public IP address</div>
+            <div class="ip-row">
+              <output id="ip" class="ip-address"></output>
+              <button id="copy" class="copy-button" type="button" aria-label="Copy public IP address">
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="8" y="8" width="12" height="12" rx="2" />
+                  <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+                </svg>
+                <span id="copy-label">Copy</span>
+              </button>
+            </div>
+            <div class="ip-meta">
+              <span id="ip-type" class="ip-type"></span>
+              <span id="last-checked" class="checked-time"></span>
+            </div>
+            <div id="change" class="change-note" hidden>
+              <span class="change-dot" aria-hidden="true"></span>
+              <strong>IP changed</strong>
+              <span>from <span id="previous-ip"></span></span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="location-block">
+            <div class="eyebrow">Estimated location</div>
+            <div class="place-row">
+              <svg class="location-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+                <circle cx="12" cy="10" r="2.5" />
+              </svg>
+              <div class="place-content">
+                <strong id="city"></strong>
+                <span id="region-country"></span>
+              </div>
+            </div>
+            <a id="map-link" class="map-link" target="_blank" rel="noopener noreferrer" hidden>
+              Open map
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 17 17 7M8 7h9v9" />
+              </svg>
+            </a>
+          </div>
+
+          <div class="network">
+            <div class="provider-row"><span>Network</span><strong id="isp"></strong></div>
+            <div class="provider-row"><span>ASN</span><strong id="asn"></strong></div>
+          </div>
+
+          <button id="copy-details" class="details-button" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="8" y="8" width="12" height="12" rx="2" />
+              <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+            </svg>
+            <span id="copy-details-label">Copy all details</span>
+          </button>
+
+          <details class="history" id="history">
+            <summary>Recent IPs <span id="history-count"></span></summary>
+            <ol id="history-list"></ol>
+          </details>
+        </section>
+      </main>
+      <footer>IP location is approximate. History stays on this device. <span>Via ipwho.is</span></footer>
+    </div>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
