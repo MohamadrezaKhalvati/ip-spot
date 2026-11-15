@@ -9,7 +9,7 @@
   },
   "scripts": {
     "check": "node --check popup.js && node --check location.mjs && node --check state.mjs && node --check network.mjs && node --check monitor.mjs && node --check background.js",
-    "test": "node --test location.test.mjs state.test.mjs network.test.mjs monitor.test.mjs",
+    "test": "node --test location.test.mjs state.test.mjs network.test.mjs monitor.test.mjs background.test.mjs",
     "verify": "npm run check && npm test"
   }
 }

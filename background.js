@@ -16,14 +16,15 @@ async function checkNetwork() {
     storage: chrome.storage.local,
     lookup: () => lookupIpFamilies(fetch, AbortSignal.timeout(NETWORK_TIMEOUT_MS)),
     notify: async (message) => {
-      if (!await chrome.permissions.contains({ permissions: ['notifications'] })) return;
-      if (await chrome.notifications.getPermissionLevel() !== 'granted') return;
-      await chrome.notifications.create(`ip-spot-change-${Date.now()}`, {
+      if (!await chrome.permissions.contains({ permissions: ['notifications'] })) return false;
+      if (await chrome.notifications.getPermissionLevel() !== 'granted') return false;
+      await chrome.notifications.create('ip-spot-ip-change', {
         type: 'basic',
         title: 'IP Spot: public IP changed',
         message,
         iconUrl: 'icons/icon128.png',
       });
+      return true;
     },
   });
   try { await checking; } finally { checking = null; }
@@ -50,3 +51,5 @@ chrome.permissions.onRemoved.addListener(({ permissions }) => {
     void chrome.storage.local.set({ [MONITOR_ENABLED_KEY]: false });
   }
 });
+
+void syncMonitoringAlarm(settings).catch(() => {});
