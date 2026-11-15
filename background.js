@@ -16,19 +16,19 @@ async function checkNetwork() {
   checking = (async () => {
     if (!await ensureMonitoringPermission(settings)) return;
     return checkForChanges({
-    storage: chrome.storage.local,
-    lookup: () => lookupIpFamilies(fetch, AbortSignal.timeout(NETWORK_TIMEOUT_MS)),
-    notify: async (message) => {
-      if (!await chrome.permissions.contains({ permissions: ['notifications'] })) return false;
-      if (await chrome.notifications.getPermissionLevel() !== 'granted') return false;
-      await chrome.notifications.create('ip-spot-ip-change', {
-        type: 'basic',
-        title: 'IP Spot: public IP changed',
-        message,
-        iconUrl: 'icons/icon128.png',
-      });
-      return true;
-    },
+      storage: chrome.storage.local,
+      lookup: () => lookupIpFamilies(fetch, AbortSignal.timeout(NETWORK_TIMEOUT_MS)),
+      notify: async (message) => {
+        if (!await chrome.permissions.contains({ permissions: ['notifications'] })) return false;
+        if (await chrome.notifications.getPermissionLevel() !== 'granted') return false;
+        await chrome.notifications.create('ip-spot-ip-change', {
+          type: 'basic',
+          title: 'IP Spot: public IP changed',
+          message,
+          iconUrl: 'icons/icon128.png',
+        });
+        return true;
+      },
     });
   })();
   try { await checking; } finally { checking = null; }
