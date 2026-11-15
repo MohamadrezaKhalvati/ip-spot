@@ -87,3 +87,16 @@ footer span { white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+.network-families { margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; }
+.family-heading { display: flex; align-items: center; justify-content: space-between; padding: 8px 0 3px; font-size: 11px; font-weight: 650; }
+.family-heading span { font-size: 10px; font-weight: 400; color: var(--muted); }
+.network-families .provider-row { font-size: 11px; padding: 9px 0; }
+.network-families output { font-weight: 550; text-align: right; overflow-wrap: anywhere; min-width: 0; }
+.monitor-setting { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 17px; }
+.monitor-setting label { display: block; font-size: 12px; font-weight: 600; cursor: pointer; }
+.monitor-setting small { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.monitor-setting input { width: 17px; height: 17px; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
+.monitor-setting input:disabled { cursor: progress; }
+.monitor-status { margin: 8px 0 0; font-size: 10px; color: var(--muted); line-height: 1.5; }
+.monitor-status.error { color: var(--error); }

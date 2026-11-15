@@ -15,11 +15,13 @@ A lightweight Chrome extension that shows your **public IP address**, its **appr
 - Open approximate coordinates in OpenStreetMap.
 - Reuse the last-known cached result if the API fails while refreshing.
 - Follow the system light/dark theme. No dependencies, accounts, or API keys.
+- Show independently detected IPv4 and IPv6 public addresses, including IPv6-only or IPv4-only connections.
+- Optionally enable background IP-change notifications; checks run approximately every 30 minutes while Chrome is running.
 
 ## Install in Chrome
 
 1. Open the [latest IP Spot release](https://github.com/MohamadrezaKhalvati/ip-spot/releases/latest).
-2. Under **Assets**, download the `-chrome.zip` file (for example, `ip-spot-v2.1.1-chrome.zip`).
+2. Under **Assets**, download the `-chrome.zip` file (for example, `ip-spot-v2.2.0-chrome.zip`).
 3. Extract the ZIP into a folder you intend to keep. **Do not select the ZIP itself** when loading the extension.
 4. Open `chrome://extensions` in Google Chrome.
 5. Enable **Developer mode** in the top-right corner.
@@ -55,14 +57,18 @@ This runs JavaScript syntax checks and the dependency-free Node.js test suite. G
 - **History:** Up to five distinct IP addresses in `chrome.storage.local`. Revisiting an IP updates its location, timestamp, and ordering.
 - **IP change detection:** Happens only when a lookup is performed. No background polling or notifications.
 - **Maps:** OpenStreetMap links for returned valid geographic coordinates.
+- **Dual-stack detection:** IPv4 via `api.ipify.org`; IPv6 via `api6.ipify.org`. A failed IPv6 check does not imply that IPv6 is unsupported.
+- **Notifications:** Off by default. Enabling alerts requests notification permission, establishes a baseline, and periodically checks both addresses using Chrome alarms. Only changes between two successfully detected IPs trigger notifications. Background checks do not collect geolocation or add entries to location history. Alerts may be delayed or skipped while Chrome is closed, the device is asleep, or the network is unavailable.
 
 ## Privacy and permissions
 
-IP Spot requests only the `storage` permission and host access to `https://ipwho.is/*`. It does **not** request access to browsing history, tabs, or device GPS.
+IP Spot requires `storage` and `alarms` permissions, host access to `https://ipwho.is/*`, `https://api.ipify.org/*`, and `https://api6.ipify.org/*`, and requests `notifications` as an **optional permission** only when enabled. It does **not** request access to browsing history, tabs, or device GPS.
 
-When a lookup occurs, your public IP and request metadata are visible to the third-party `ipwho.is` service. Clicking a map link opens OpenStreetMap, which also receives normal browser request metadata. Cache and history stay in Chrome's **local** extension storage; they are not synced by IP Spot. Chrome clears that storage when the extension is uninstalled. IP-based locations are approximate and can be affected by VPNs, proxies, cloud hosting, and ISP routing.
+When a lookup occurs, your public IP and request metadata are visible to `ipwho.is` (geolocation) and ipify (IPv4/IPv6 checks). When monitoring is enabled, periodic requests are sent to ipify; disabling notifications stops these checks. Clicking a map link opens OpenStreetMap, which also receives normal browser request metadata. Cache and history stay in Chrome's **local** extension storage; they are not synced by IP Spot. Chrome clears that storage when the extension is uninstalled. IP-based locations are approximate and can be affected by VPNs, proxies, cloud hosting, and ISP routing.
 
 ## Release notes
+
+**v2.2.0**: Added separate public IPv4/IPv6 checks and opt-in background change notifications with permission-on-demand and a 30-minute polling interval.
 
 **v2.1.1**: Added geographic details, last-checked dates, and map links to the recent-IP history, with compatibility for existing v2.1 history entries.
 

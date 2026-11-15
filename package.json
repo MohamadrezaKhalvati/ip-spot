@@ -1,6 +1,6 @@
 {
   "name": "ip-spot",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
   "description": "A minimal Chrome extension for public IP geolocation and recent IP history",
@@ -8,8 +8,8 @@
     "node": ">=22"
   },
   "scripts": {
-    "check": "node --check popup.js && node --check location.mjs && node --check state.mjs",
-    "test": "node --test location.test.mjs state.test.mjs",
+    "check": "node --check popup.js && node --check location.mjs && node --check state.mjs && node --check network.mjs && node --check monitor.mjs && node --check background.js",
+    "test": "node --test location.test.mjs state.test.mjs network.test.mjs monitor.test.mjs",
     "verify": "npm run check && npm test"
   }
 }

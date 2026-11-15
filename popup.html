@@ -75,6 +75,12 @@
             <div class="provider-row"><span>ASN</span><strong id="asn"></strong></div>
           </div>
 
+          <section class="network-families" aria-label="IPv4 and IPv6 addresses">
+            <div class="family-heading">IP versions <span id="family-status" role="status" aria-live="polite"></span></div>
+            <div class="provider-row"><span>IPv4</span><output id="ipv4">Checking…</output></div>
+            <div class="provider-row"><span>IPv6</span><output id="ipv6">Checking…</output></div>
+          </section>
+
           <button id="copy-details" class="details-button" type="button">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <rect x="8" y="8" width="12" height="12" rx="2" />
@@ -83,13 +89,22 @@
             <span id="copy-details-label">Copy all details</span>
           </button>
 
+          <div class="monitor-setting">
+            <div>
+              <label for="monitor-toggle">Notify on IP changes</label>
+              <small>Checks every 30 min while Chrome is running</small>
+            </div>
+            <input id="monitor-toggle" type="checkbox" role="switch" aria-label="Enable background IP change notifications" />
+          </div>
+          <p id="monitor-status" class="monitor-status" role="status" aria-live="polite" hidden></p>
+
           <details class="history" id="history">
             <summary>Recent IPs <span id="history-count"></span></summary>
             <ol id="history-list"></ol>
           </details>
         </section>
       </main>
-      <footer>IP location is approximate. History stays on this device. <span>Via ipwho.is</span></footer>
+      <footer>IP location is approximate. History stays on this device. <span>Via ipwho.is &amp; ipify</span></footer>
     </div>
     <script type="module" src="popup.js"></script>
   </body>

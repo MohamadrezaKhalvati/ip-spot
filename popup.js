@@ -1,5 +1,7 @@
 import { buildMapUrl, formatCopyDetails, formatLocationLabel, formatPlace, lookupIpLocation } from './location.mjs';
 import { createIpSpotService, formatCheckedTime, formatHistoryTime } from './state.mjs';
+import { createNetworkService, lookupIpFamilies } from './network.mjs';
+import { MONITOR_ENABLED_KEY, setMonitoringEnabled } from './monitor.mjs';
 
 const LOOKUP_TIMEOUT_MS = 8000;
 const COPY_FEEDBACK_MS = 1500;
@@ -8,6 +10,7 @@ const elements = Object.fromEntries(
     'refresh', 'copy', 'copy-label', 'copy-details', 'copy-details-label', 'status', 'result',
     'ip', 'ip-type', 'last-checked', 'change', 'previous-ip', 'city', 'region-country',
     'map-link', 'isp', 'asn', 'history-count', 'history-list',
+    'ipv4', 'ipv6', 'family-status', 'monitor-toggle', 'monitor-status',
   ].map((id) => [id, document.getElementById(id)]),
 );
 
@@ -16,7 +19,13 @@ const service = createIpSpotService({
   lookup: (signal) => lookupIpLocation(fetch, signal),
 });
 
+const networkService = createNetworkService({
+  storage: chrome.storage.local,
+  lookup: () => lookupIpFamilies(fetch, AbortSignal.timeout(LOOKUP_TIMEOUT_MS)),
+});
+
 let currentSnapshot = null;
+let currentFamilies = null;
 const feedbackTimers = new Map();
 
 function showStatus(message, error = false) {
@@ -99,6 +108,30 @@ function displayLocation(snapshot) {
   elements.status.hidden = true;
 }
 
+function displayFamilies(snapshot) {
+  currentFamilies = snapshot;
+  elements.ipv4.textContent = snapshot.ipv4 ?? 'Not detected';
+  elements.ipv6.textContent = snapshot.ipv6 ?? 'Not detected';
+  elements['family-status'].textContent = snapshot.fresh ? 'Updated' : 'Previous check';
+}
+
+async function refreshFamilies(force = false) {
+  elements['family-status'].textContent = 'Checking…';
+  try {
+    displayFamilies(await networkService.get({ force }));
+  } catch {
+    const last = await networkService.readCache();
+    if (last) {
+      displayFamilies(last);
+      elements['family-status'].textContent = 'Offline · cached';
+    } else {
+      elements.ipv4.textContent = 'Check failed';
+      elements.ipv6.textContent = 'Check failed';
+      elements['family-status'].textContent = 'Retry';
+    }
+  }
+}
+
 async function refreshLocation(force = false) {
   if (elements.refresh.disabled) return;
   elements.refresh.disabled = true;
@@ -134,6 +167,48 @@ async function copyText(text, labelId, defaultLabel) {
   }
 }
 
+async function initializeFamilies() {
+  const cached = await networkService.readCache();
+  if (cached) displayFamilies(cached);
+  if (!cached?.fresh) await refreshFamilies();
+}
+
+async function initializeMonitoring() {
+  try {
+    const saved = (await chrome.storage.local.get(MONITOR_ENABLED_KEY))?.[MONITOR_ENABLED_KEY] === true;
+    const permission = await chrome.permissions.contains({ permissions: ['notifications'] });
+    elements['monitor-toggle'].checked = saved && permission;
+  } catch {
+    elements['monitor-toggle'].checked = false;
+  }
+}
+
+function showMonitorStatus(message, isError = false) {
+  elements['monitor-status'].textContent = message;
+  elements['monitor-status'].classList.toggle('error', isError);
+  elements['monitor-status'].hidden = !message;
+}
+
+async function changeMonitoring(enabled, permissionPromise) {
+  elements['monitor-toggle'].disabled = true;
+  showMonitorStatus('');
+  try {
+    if (enabled && !await permissionPromise) {
+      elements['monitor-toggle'].checked = false;
+      showMonitorStatus('Notifications permission was not granted.', true);
+      return;
+    }
+    await setMonitoringEnabled({ storage: chrome.storage.local, alarms: chrome.alarms }, enabled);
+    elements['monitor-toggle'].checked = enabled;
+    showMonitorStatus(enabled ? 'Monitoring is on. The first check establishes a baseline.' : 'Monitoring is off.');
+  } catch {
+    elements['monitor-toggle'].checked = !enabled;
+    showMonitorStatus('Unable to update notification settings.', true);
+  } finally {
+    elements['monitor-toggle'].disabled = false;
+  }
+}
+
 async function initialize() {
   const cached = await service.readCache();
   if (cached) displayLocation(cached);
@@ -144,13 +219,23 @@ async function initialize() {
   }
 }
 
-elements.refresh.addEventListener('click', () => void refreshLocation(true));
+elements.refresh.addEventListener('click', () => {
+  void refreshLocation(true);
+  void refreshFamilies(true);
+});
+elements['monitor-toggle'].addEventListener('change', (event) => {
+  const enabled = event.target.checked;
+  const permission = enabled
+    ? chrome.permissions.request({ permissions: ['notifications'] })
+    : Promise.resolve(true);
+  void changeMonitoring(enabled, permission);
+});
 elements.copy.addEventListener('click', () => {
   if (currentSnapshot) void copyText(currentSnapshot.location.ip, 'copy-label', 'Copy');
 });
 elements['copy-details'].addEventListener('click', () => {
   if (currentSnapshot) {
-    void copyText(formatCopyDetails(currentSnapshot.location, currentSnapshot.checkedAt), 'copy-details-label', 'Copy all details');
+    void copyText(formatCopyDetails(currentSnapshot.location, currentSnapshot.checkedAt) + (currentFamilies ? `\nIPv4: ${currentFamilies.ipv4 ?? 'Not detected'}\nIPv6: ${currentFamilies.ipv6 ?? 'Not detected'}` : ''), 'copy-details-label', 'Copy all details');
   }
 });
-void initialize();
+void Promise.all([initialize(), initializeFamilies(), initializeMonitoring()]);
