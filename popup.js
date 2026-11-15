@@ -110,8 +110,8 @@ function displayLocation(snapshot) {
 
 function displayFamilies(snapshot) {
   currentFamilies = snapshot;
-  elements.ipv4.textContent = snapshot.ipv4 ?? 'Not detected';
-  elements.ipv6.textContent = snapshot.ipv6 ?? 'Not detected';
+  elements.ipv4.textContent = snapshot.ipv4 ?? 'Unavailable';
+  elements.ipv6.textContent = snapshot.ipv6 ?? 'Unavailable';
   elements['family-status'].textContent = snapshot.fresh ? 'Updated' : 'Previous check';
 }
 
@@ -235,7 +235,7 @@ elements.copy.addEventListener('click', () => {
 });
 elements['copy-details'].addEventListener('click', () => {
   if (currentSnapshot) {
-    void copyText(formatCopyDetails(currentSnapshot.location, currentSnapshot.checkedAt) + (currentFamilies ? `\nIPv4: ${currentFamilies.ipv4 ?? 'Not detected'}\nIPv6: ${currentFamilies.ipv6 ?? 'Not detected'}` : ''), 'copy-details-label', 'Copy all details');
+    void copyText(formatCopyDetails(currentSnapshot.location, currentSnapshot.checkedAt) + (currentFamilies ? `\nIPv4: ${currentFamilies.ipv4 ?? 'Unavailable'}\nIPv6: ${currentFamilies.ipv6 ?? 'Unavailable'}` : ''), 'copy-details-label', 'Copy all details');
   }
 });
 void Promise.all([initialize(), initializeFamilies(), initializeMonitoring()]);

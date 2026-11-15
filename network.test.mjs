@@ -88,3 +88,26 @@ test('network service handles old or corrupt storage and concurrent checks', asy
   assert.deepEqual([a.ipv4, b.ipv4], ['203.0.113.8', '203.0.113.8']);
   assert.equal(calls, 1);
 });
+
+test('detects an IPv6-only connection when IPv4 lookup fails', async () => {
+  const result = await lookupIpFamilies(async (url) => {
+    if (url.includes('api6')) return reply('2001:db8::99');
+    throw new Error('IPv4 endpoint cannot be reached');
+  });
+  assert.deepEqual(result, { ipv4: null, ipv6: '2001:db8::99' });
+});
+
+test('rejects a timed-out dual-family lookup without overwriting previously saved IPs', async () => {
+  const storage = fakeStorage();
+  let fail = false;
+  const service = createNetworkService({ storage, lookup: async () => {
+    if (fail) return lookupIpFamilies(async () => { throw new DOMException('Timed out', 'TimeoutError'); });
+    return { ipv4: '203.0.113.12', ipv6: '2001:db8::12' };
+  } });
+  await service.get();
+  fail = true;
+  await assert.rejects(() => service.get({ force: true }), /IP version check failed/);
+  const cached = await service.readCache();
+  assert.equal(cached.ipv4, '203.0.113.12');
+  assert.equal(cached.ipv6, '2001:db8::12');
+});
