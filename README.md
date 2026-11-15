@@ -18,13 +18,23 @@ A lightweight Chrome extension that shows your **public IP address**, its **appr
 
 ## Install in Chrome
 
-1. Download the [source ZIP from Releases](../../releases) or clone this repository.
-2. Extract the ZIP, if needed.
-3. Open `chrome://extensions` and enable **Developer mode**.
-4. Select **Load unpacked** and choose the directory containing `manifest.json`.
-5. Pin **IP Spot** to the toolbar and open it.
+1. Open the [latest IP Spot release](https://github.com/MohamadrezaKhalvati/ip-spot/releases/latest).
+2. Under **Assets**, download the `-chrome.zip` file (for example, `ip-spot-v2.1.1-chrome.zip`).
+3. Extract the ZIP into a folder you intend to keep. **Do not select the ZIP itself** when loading the extension.
+4. Open `chrome://extensions` in Google Chrome.
+5. Enable **Developer mode** in the top-right corner.
+6. Click **Load unpacked** and select the extracted folder containing `manifest.json`.
+7. Pin **IP Spot** to the toolbar and click its icon to view your public IP and approximate location.
 
-Chrome uses the repository directory itself: no compilation or build step is required.
+Chrome runs IP Spot directly from the extracted files; no build step is required.
+
+### Update an existing installation
+
+1. Download the newest `-chrome.zip` asset from [Releases](https://github.com/MohamadrezaKhalvati/ip-spot/releases/latest).
+2. Extract it over the files in the **same folder** used for the existing unpacked extension.
+3. Open `chrome://extensions` and click **Reload** on IP Spot.
+
+Keep the same unpacked extension directory to preserve its Chrome extension identity. Your saved history is tied to that identity; removing and reinstalling the extension or changing its identity can clear or disconnect it.
 
 ## Run tests
 
@@ -60,4 +70,5 @@ When a lookup occurs, your public IP and request metadata are visible to the thi
 
 ## License
 
-No open-source license has been selected yet. Add a `LICENSE` file before distributing this project under an open-source license.
+Licensed under the [MIT License](LICENSE).
+
